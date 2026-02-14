@@ -3,6 +3,26 @@ import cv2
 from collections import deque
 
 model = YOLO("yolov8n.pt")
+# 🔥 Fire Detection Function
+def detect_fire(frame):
+    # Convert frame to HSV color space
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+    # Fire color range (orange/yellow/red)
+    lower = (18, 50, 50)
+    upper = (35, 255, 255)
+
+    # Create mask
+    mask = cv2.inRange(hsv, lower, upper)
+
+    # Count bright fire pixels
+    fire_pixels = cv2.countNonZero(mask)
+
+    # Threshold for fire alert
+    if fire_pixels > 4000:
+        return True
+    return False
+
 
 def crowd_detection(threshold=5):
     cap = cv2.VideoCapture(0)
@@ -40,6 +60,13 @@ def crowd_detection(threshold=5):
         # 🔹 Add to buffer & compute smooth count
         count_buffer.append(raw_count)
         person_count = round(sum(count_buffer) / len(count_buffer))
+        fire_alert = detect_fire(frame)
+
+        # 🔥 Check for fire
+        if detect_fire(frame):
+            cv2.putText(frame, "FIRE ALERT!", (20, 120),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
+
 
         # Alert logic
         color = (0, 255, 0)
