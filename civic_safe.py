@@ -1,51 +1,53 @@
 from ultralytics import YOLO
 import cv2
 from collections import deque
+import winsound
+import time
 
+# Load YOLO model
 model = YOLO("yolov8n.pt")
+
 # 🔥 Fire Detection Function
 def detect_fire(frame):
-    # Convert frame to HSV color space
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-    # Fire color range (orange/yellow/red)
     lower = (18, 50, 50)
     upper = (35, 255, 255)
 
-    # Create mask
     mask = cv2.inRange(hsv, lower, upper)
-
-    # Count bright fire pixels
     fire_pixels = cv2.countNonZero(mask)
 
-    # Threshold for fire alert
-    if fire_pixels > 4000:
-        return True
-    return False
+    return fire_pixels > 4000
+
+
+# 🔔 Play alert sound in background
+def play_alert_sound():
+    winsound.PlaySound("alert.wav",
+                       winsound.SND_FILENAME | winsound.SND_ASYNC)
 
 
 def crowd_detection(threshold=5):
     cap = cv2.VideoCapture(0)
 
-    # 🔹 Buffer to smooth count (prevents flickering)
-    count_buffer = deque(maxlen=10)  # adjust 5–15 if needed
+    count_buffer = deque(maxlen=10)
+
+    last_alert_time = 0
+    alert_cooldown = 5   # seconds (prevents continuous sound)
 
     while True:
         ret, frame = cap.read()
         if not ret:
             break
 
-        # Lower confidence so sitting / partial bodies are detected
         results = model(frame, stream=True, conf=0.4)
 
-        raw_count = 0  # count for THIS frame only
+        raw_count = 0
 
         for r in results:
             for box in r.boxes:
                 cls = int(box.cls[0])
                 conf = float(box.conf[0])
 
-                # ✔ Detect standing + sitting + partial people
                 if cls == 0 and conf >= 0.4:
                     raw_count += 1
 
@@ -54,32 +56,49 @@ def crowd_detection(threshold=5):
                                   (0, 255, 0), 2)
                     cv2.putText(frame, f"Person {conf:.2f}",
                                 (x1, y1 - 8),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                                (0, 255, 0), 2)
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                0.5, (0, 255, 0), 2)
 
-        # 🔹 Add to buffer & compute smooth count
+        # Smooth count
         count_buffer.append(raw_count)
         person_count = round(sum(count_buffer) / len(count_buffer))
+
+        # Detect fire (only once!)
         fire_alert = detect_fire(frame)
 
-        # 🔥 Check for fire
-        if detect_fire(frame):
-            cv2.putText(frame, "FIRE ALERT!", (20, 120),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
-
-
-        # Alert logic
+        # Default status
         color = (0, 255, 0)
-        alert = "NORMAL"
+        alert_text = "NORMAL"
+        alert_triggered = False
 
+        # 🔥 Fire alert
+        if fire_alert:
+            cv2.putText(frame, "FIRE ALERT!", (20, 120),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        1, (0, 0, 255), 3)
+            alert_triggered = True
+
+        # 👥 Crowd alert
         if person_count >= threshold:
             color = (0, 0, 255)
-            alert = "CROWD ALERT!"
+            alert_text = "CROWD ALERT!"
+            alert_triggered = True
 
+        # 🔔 Sound with cooldown
+        current_time = time.time()
+        if alert_triggered and (current_time - last_alert_time > alert_cooldown):
+            print("ALERT TRIGGERED")
+            play_alert_sound()
+            last_alert_time = current_time
+
+        # Display info
         cv2.putText(frame, f"People: {person_count}", (20, 40),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
-        cv2.putText(frame, alert, (20, 80),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1, color, 2)
+
+        cv2.putText(frame, alert_text, (20, 80),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1, color, 2)
 
         cv2.imshow("CivicSafe - Crowd Detection", frame)
 
@@ -88,5 +107,3 @@ def crowd_detection(threshold=5):
 
     cap.release()
     cv2.destroyAllWindows()
-
-crowd_detection(threshold=2)
