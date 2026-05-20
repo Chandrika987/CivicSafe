@@ -1,209 +1,108 @@
-# 🚨 CivicSafe – AI-Based Crowd & Fire Detection System
+# CivicSafe 🛡️
 
-CivicSafe is a real-time AI-powered surveillance and public safety monitoring system that detects overcrowding and fire-like incidents using computer vision techniques.
-
-Built using **YOLOv8**, **OpenCV**, and **Python**, the system monitors live webcam feeds and triggers alerts during unsafe situations.
+A real-time AI-powered public safety system that detects crowd overcrowding and fire hazards simultaneously using a live webcam feed — and triggers instant audio alerts.
 
 ---
 
-# 📌 Features
+## 🔍 What It Does
 
-- 👥 Real-time crowd detection using YOLOv8
-- 🔥 Fire detection using HSV color filtering
-- 📹 Live webcam monitoring
-- 🔔 Audio alert system with cooldown control
-- 📊 Person count smoothing using deque buffer
-- 🟢 Live bounding box visualization
-- ⚡ Lightweight and fast inference using YOLOv8n
+CivicSafe monitors live video and raises alerts for two types of safety risks:
 
----
+| Detection | Method | Alert Trigger |
+|---|---|---|
+| 👥 Crowd | YOLOv8 person detection | When crowd count ≥ threshold |
+| 🔥 Fire | OpenCV HSV color masking | When fire-colored pixels > 4000 |
 
-# 🛠️ Technologies Used
-
-| Technology | Purpose |
-|------------|----------|
-| Python | Core programming language |
-| OpenCV | Video capture & image processing |
-| YOLOv8 (Ultralytics) | Real-time person detection |
-| NumPy | Numerical computations |
-| Winsound | Audio alert system |
+Both run in real time on a single webcam feed with a shared audio alert system (with 5-second cooldown to avoid repeated sounds).
 
 ---
 
-# 📂 Project Structure
+## 🧠 How It Works
 
-```bash
-CivicSafe/
-│
-├── civic_safe.py        # Core detection logic
-├── app_civic.py         # Main execution file
-├── test_sound.py        # Alert sound testing
-├── alert.wav            # Alert audio file
-├── yolov8n.pt           # YOLOv8 model
-├── requirements.txt     # Project dependencies
-└── README.md            # Project documentation
+```
+Live Webcam Feed
+      │
+      ├──► YOLOv8 (Person Detection)
+      │         └── Rolling 10-frame average → Crowd Alert
+      │
+      └──► OpenCV HSV Masking
+                └── Pixel threshold check → Fire Alert
+                          │
+                    🔔 Audio Alert (alert.wav) with cooldown
 ```
 
+- **Smooth counting**: a 10-frame rolling buffer prevents flickering crowd counts from noisy detections
+- **Confidence filtering**: only detections with ≥ 40% confidence are counted
+- **Modular code**: `civic_safe.py` holds all logic; `app_civic.py` is the clean entry point
+
 ---
 
-# ⚙️ Installation
+## 🛠️ Tech Stack
 
-## 1️⃣ Clone the Repository
+- Python 3.x
+- [YOLOv8 (Ultralytics)](https://github.com/ultralytics/ultralytics) — real-time object detection
+- OpenCV — video capture and HSV fire detection
+- NumPy — array operations
 
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the repo
 ```bash
-git clone https://github.com/your-username/CivicSafe.git
+git clone https://github.com/Chandrika987/CivicSafe.git
 cd CivicSafe
 ```
 
----
-
-## 2️⃣ Install Dependencies
-
+### 2. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-Or install manually:
-
-```bash
-pip install opencv-python ultralytics numpy
-```
-
----
-
-# ▶️ How to Run
-
-## Run the Main Project
-
+### 3. Run
 ```bash
 python app_civic.py
 ```
 
+Press `q` to quit the live window.
+
 ---
 
-## Test Alert Sound (Optional)
+## ⚙️ Configuration
 
-```bash
-python test_sound.py
+In `app_civic.py`, adjust the crowd threshold:
+
+```python
+crowd_detection(threshold=5)  # Alert when 5+ people detected
 ```
 
 ---
 
-# 🧠 System Workflow
+## 📁 Project Structure
 
-```text
-Webcam Input
-     ↓
-YOLOv8 Person Detection
-     ↓
-Person Counting + Smoothing
-     ↓
-Crowd Threshold Check
-     ↓
-Fire Detection (HSV Color Filtering)
-     ↓
-Alert Decision Logic
-     ↓
-Audio Alert System
-     ↓
-Live Display Window
+```
+CivicSafe/
+├── civic_safe.py       # Core detection logic (crowd + fire + alerts)
+├── app_civic.py        # Entry point
+├── alert.wav           # Alert sound file
+├── yolov8n.pt          # Pre-trained YOLOv8 nano model
+├── requirements.txt
+└── README.md
 ```
 
 ---
 
-# 👥 Crowd Detection
+## 🔮 Planned Improvements (Ongoing)
 
-- Uses YOLOv8n pretrained model
-- Detects persons in real-time
-- Counts people from webcam feed
-- Smooths count using deque buffer
-- Triggers crowd alert if threshold exceeds limit
-
----
-
-# 🔥 Fire Detection
-
-The system uses HSV color filtering to identify fire-like regions.
-
-### Process:
-1. Convert frame to HSV color space
-2. Apply fire color range mask
-3. Count fire-like pixels
-4. Trigger fire alert if threshold exceeds limit
+- [ ] Streamlit web dashboard for live monitoring
+- [ ] Hugging Face model integration for smarter scene classification
+- [ ] Multi-camera support
+- [ ] Logging alerts to a database with timestamps
+- [ ] Deploy as a portable desktop app
 
 ---
 
-# 🔔 Alert System
+## 👩‍💻 Author
 
-- Alert sound plays asynchronously
-- Cooldown mechanism prevents repeated alarms
-- Alerts triggered for:
-  - Crowd threshold exceeded
-  - Fire detection
-
----
-
-# 📌 Advantages
-
-- Real-time monitoring
-- Lightweight AI model
-- Fast detection speed
-- Low-cost implementation
-- Easy deployment
-
----
-
-# ⚠️ Limitations
-
-- Fire detection is color-based
-- Windows-only sound support (`winsound`)
-- No cloud/database integration
-- Single camera support
-- No remote notification system
-
----
-
-# 🔮 Future Enhancements
-
-- Deep learning-based fire detection
-- SMS/Email alert integration
-- Cloud-based incident logging
-- Multi-camera support
-- Web dashboard integration
-- Mobile application support
-
----
-
-# 📋 Requirements
-
-Contents of `requirements.txt`:
-
-```txt
-opencv-python
-ultralytics
-numpy
-```
-
----
-
-# 💻 System Requirements
-
-## Hardware
-- Webcam
-- Minimum 4GB RAM
-- Intel i5 or higher recommended
-
-## Software
-- Python 3.9+
-- Windows OS (recommended)
-
----
-
-# 📖 Conclusion
-
-CivicSafe demonstrates how AI and computer vision can improve public safety monitoring through automated crowd detection and fire alert systems.
-
-The project serves as a strong prototype for smart surveillance and future smart-city safety applications.
-
----
-
+**Chandrika Pala** — B.Tech CSE, SRKR Engineering College  
+[LinkedIn](https://linkedin.com/in/chandrikapala) · [GitHub](https://github.com/Chandrika987)
