@@ -42,7 +42,7 @@ Live Webcam Feed
 - Python 3.x
 - [YOLOv8 (Ultralytics)](https://github.com/ultralytics/ultralytics) — real-time object detection
 - OpenCV — video capture and HSV fire detection
-- NumPy — array operations
+- NumPy — array operations...
 
 ---
 
