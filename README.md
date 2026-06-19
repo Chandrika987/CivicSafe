@@ -64,7 +64,7 @@ pip install -r requirements.txt
 python app_civic.py
 ```
 
-Press `q` to quit the live window.
+
 
 ---
 
