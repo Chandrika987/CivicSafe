@@ -1,7 +1,6 @@
 # CivicSafe 🛡️
 
 A real-time AI-powered public safety system that detects crowd overcrowding and fire hazards simultaneously using a live webcam feed — and triggers instant audio alerts.
----------------------------------------------------------------------------------------------------
 
 ---
 
